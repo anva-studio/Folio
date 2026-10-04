@@ -1,0 +1,11 @@
+import {useEffect,useState} from 'react';
+import {useSession} from '../../application/FolioProvider';
+import {prepareProfilePhoto} from '../../application/profilePhoto';
+import {ProfileAvatar} from './ProfileAvatar';
+export function ProfileIdentity(){
+ const {controller,repo,profileId,controllerRevision}=useSession();const [name,setName]=useState('Your Folio');const [preview,setPreview]=useState<string>();const [error,setError]=useState('');const [busy,setBusy]=useState(false);const [status,setStatus]=useState('');
+ useEffect(()=>{if(profileId)void repo.listProfiles().then(list=>setName(list.find(p=>p.profileId===profileId)?.label??'Your Folio'));},[repo,profileId,controllerRevision]);
+ if(!controller)return null;const photo=controller.snapshot.identity?.photo;
+ const save=(value?:string)=>{controller.setProfileIdentity(value?{photo:value}:{});setPreview(undefined);setStatus('Profile picture updated.');};
+ return <section className="card"><h2>Profile identity</h2><div className="identity-preview"><ProfileAvatar name={name} photo={preview??photo} size={80}/><div><strong>{name}</strong><p className="field-help">{photo?'Photo':'Initial avatar'} · Your photo is encrypted with your profile. The locked picker uses initials.</p></div></div><div className="contact-actions"><button className="btn btn-secondary" onClick={()=>save()} disabled={!photo&&!preview}>Use initial avatar / remove photo</button><label className="field">{photo?'Replace photo':'Choose photo'}<input type="file" accept="image/jpeg,image/png,image/webp" disabled={busy} onChange={async e=>{const file=e.target.files?.[0];e.target.value='';if(!file)return;setBusy(true);setError('');try{setPreview(await prepareProfilePhoto(file));}catch(err){setError(err instanceof Error?err.message:'Could not read photo.');}finally{setBusy(false);}}}/></label></div><p className="field-help">JPEG, PNG or WebP, up to 15 MB. Center-cropped and resized to 256 × 256 on this device.</p>{preview&&<div className="contact-actions"><button className="btn btn-primary" onClick={()=>save(preview)}>Use this photo</button><button className="btn btn-secondary" onClick={()=>setPreview(undefined)}>Cancel preview</button></div>}{busy&&<p role="status">Preparing photo…</p>}{error&&<p role="alert">{error}</p>}<p role="status">{status}</p></section>;
+}
