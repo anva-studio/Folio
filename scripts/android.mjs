@@ -16,6 +16,10 @@ if (!env.ANDROID_HOME && process.platform === 'win32') {
  if (fs.existsSync(sdk)) env.ANDROID_HOME = sdk;
 }
 if (!env.ANDROID_HOME && !env.ANDROID_SDK_ROOT && !fs.existsSync('android/local.properties')) throw new Error('Set ANDROID_HOME to an installed Android SDK, or add android/local.properties.');
+if(process.argv[2]==='test'){
+ const result=spawnSync(process.execPath,['scripts/android-instrumentation.mjs'],{env,stdio:'inherit'});
+ process.exit(result.status??1);
+}
 const result = spawnSync(process.platform === 'win32' ? 'gradlew.bat' : './gradlew', [task], { cwd: 'android', env, stdio: 'inherit', shell: process.platform === 'win32' });
 process.exit(result.status ?? 1);
 

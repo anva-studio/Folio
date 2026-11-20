@@ -31,6 +31,13 @@ else {
     });
     win = new BrowserWindow({ width: 1280, height: 850, minWidth: 360, minHeight: 540, title: 'Folio', icon: path.join(root,'icon-512.png'), autoHideMenuBar: true, webPreferences: { preload: path.join(__dirname, 'preload.cjs'), nodeIntegration: false, contextIsolation: true, sandbox: true, webSecurity: true } });
     win.removeMenu();
+    const conceal = () => {
+      win.setContentProtection(true);
+      win.webContents.send('folio:privacy-hide');
+    };
+    win.on('blur', conceal);
+    win.on('minimize', conceal);
+    win.on('focus', () => win.setContentProtection(false));
     win.webContents.on('before-input-event', (event, input) => {
       if (input.key === 'F5' || ((input.control || input.meta) && input.key.toLowerCase() === 'r')) event.preventDefault();
     });

@@ -6,7 +6,7 @@ const opened=[];shell.openExternal=async url=>{opened.push(url);};
 const path = require('node:path');
 const fs = require('node:fs/promises');
 const assert = require('node:assert/strict');
-const fixture = path.resolve(__dirname, '../../../work/windows-runtime-' + Date.now());
+const fixture = path.resolve(__dirname, '../verification/1.1.1/windows-runtime-' + Date.now());
 app.setPath('userData', fixture);
 app.on('browser-window-created', (_event, window) => { window.hide(); });
 require(path.join(process.env.FOLIO_INSTALLED_RESOURCES || path.resolve(__dirname,'../release/windows/win-unpacked/resources'),'app.asar/desktop/main.cjs'));
@@ -26,6 +26,8 @@ async function fill(id, value) {
   await evaluate(`{const el=document.getElementById(${JSON.stringify(id)});if(!el)throw new Error('Missing input');Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(el,${JSON.stringify(value)});el.dispatchEvent(new Event('input',{bubbles:true}));}`);
 }
 async function click(label) {
+  await evaluate("{const b=[...document.querySelectorAll('.privacy-curtain button')].find(b=>b.textContent==='Continue');if(b)b.click();}");
+  await wait("Array.from(document.querySelectorAll('button')).some(b=>b.textContent.trim().replace(/^•\\s*/,'')==="+JSON.stringify(label)+"&&!b.disabled&&b.getBoundingClientRect().width)",'button '+label);
   await evaluate(`{const b=Array.from(document.querySelectorAll('button')).find(b=>b.textContent.trim().replace(/^•\s*/,'')===${JSON.stringify(label)}&&!b.disabled&&b.getBoundingClientRect().width);if(!b)throw new Error('Missing button '+${JSON.stringify(label)});b.click();}`);
 }
 async function download(label, filename) {
@@ -43,6 +45,7 @@ app.whenReady().then(async () => {
   await fs.mkdir(fixture,{recursive:true});
   while (!BrowserWindow.getAllWindows().length) await delay(20);
   win = BrowserWindow.getAllWindows()[0];
+  win.webContents.setBackgroundThrottling(false);
   win.webContents.on('console-message', event => {
     if (event.level === 'error') errors.push(event.message);
   });
@@ -86,8 +89,10 @@ app.whenReady().then(async () => {
   assert.equal(backupText.includes('disposable-windows-qa'),false);
   const csvPath = await download('Export accounts','qa.csv');
   assert.equal((await fs.readFile(csvPath,'utf8')).includes('PRIVATE_QA_ACCOUNT'),true);
-  await evaluate(`{const dt=new DataTransfer();dt.items.add(new File([${JSON.stringify(backupText)}],'qa.folio'));const el=document.getElementById('restore-input');el.files=dt.files;el.dispatchEvent(new Event('change',{bubbles:true}));}`);
-  await wait("!!document.getElementById('replace-confirm')",'restore collision confirmation');await fill('replace-confirm','Windows QA');await click('Replace');await wait("!!document.getElementById('unlock-password')",'restore returns locked');
+  await click('Restore from backup');
+  await evaluate(`{const dt=new DataTransfer();dt.items.add(new File([${JSON.stringify(backupText)}],'qa.folio'));const el=document.getElementById('restore-verified-file');el.files=dt.files;el.dispatchEvent(new Event('change',{bubbles:true}));}`);
+  await fill('restore-verified-secret','disposable-windows-qa');await click('Verify backup');
+  await wait("!!document.getElementById('restore-verified-confirm')",'restore collision confirmation');await fill('restore-verified-confirm','Windows QA');await click('Replace verified profile');await wait("!!document.getElementById('unlock-password')",'restore returns locked');
   await evaluate("document.querySelector('.profile-row-btn').click()");await fill('unlock-password','disposable-windows-qa');await click('Unlock');await wait("document.querySelector('.screen-title')?.textContent==='Dashboard'",'restored profile');assert.equal(await evaluate("document.body.textContent.includes('1,184.56')"),true);
   // Reloading the production origin starts locked and keeps the vault.
   win.webContents.reload();
@@ -97,8 +102,8 @@ app.whenReady().then(async () => {
   await evaluate("document.querySelector('.profile-row-btn').click()");await fill('unlock-password','disposable-windows-qa');await click('Unlock');await wait("document.querySelector('.screen-title')?.textContent==='Dashboard'",'reloaded profile unlock');
   assert.equal(await evaluate("!!document.querySelector('.current-identity img')"),true);
   await click('Help & FAQ');await wait("!!document.getElementById('help-search')||!!document.querySelector('input[type=search]')",'bundled Help');
-  await click('Email ANVA');await click('Visit ANVA');await click('Send feedback');await click('Copy email');await delay(150);assert.equal((await clipboard.readText()),'Anvahq@gmail.com');await click('Copy app information');await delay(150);assert.match((await clipboard.readText()),/Folio 1.0.0/);assert.ok(!(await clipboard.readText()).includes('PRIVATE_QA_ACCOUNT'));
-  assert.deepEqual(opened,['mailto:Anvahq@gmail.com','https://anva-studio.github.io/','https://forms.gle/W7qtQRmqxgkZkLtS9']);
+  await click('Email ANVA');await click('Visit ANVA');await click('Send feedback');await click('Copy email');await delay(150);assert.equal((await clipboard.readText()),'Anvahq@gmail.com');await click('Copy app information');await delay(150);assert.ok((await clipboard.readText()).includes('Folio '+require('../package.json').version));assert.ok(!(await clipboard.readText()).includes('PRIVATE_QA_ACCOUNT'));
+  assert.deepEqual(opened,['mailto:Anvahq@gmail.com','https://anvastudio.in/','https://forms.gle/W7qtQRmqxgkZkLtS9']);
   await click('Welcome to Folio');await wait("!!document.querySelector('.welcome-page')",'return Welcome');await click('EXPLORE EXAMPLE PROFILE');await wait("document.body.textContent.includes('EXAMPLE · SAMPLE DATA')",'sample opened');await click('Settings');
   assert.equal(await evaluate("[...document.querySelectorAll('button')].some(b=>b.textContent==='Create encrypted backup')"),false);
   const sampleCsv=await download('Export accounts','example-accounts.csv');assert.ok(originalDownloadName.startsWith('FOLIO-EXAMPLE-'));assert.ok((await fs.readFile(sampleCsv,'utf8')).includes('Everyday'));
@@ -106,14 +111,23 @@ app.whenReady().then(async () => {
   await click('Reset Example Profile');await click('Reset example');await wait("document.body.textContent.includes('Meera Rao')&&!document.querySelector('[role=dialog]')",'sample reset');await click('Settings');await click('Delete Example Profile');await click('Delete example');await wait("!!document.querySelector('.welcome-page')",'sample deletion');
   win.webContents.reload();await wait("[...document.querySelectorAll('button')].some(b=>b.textContent==='RESTORE EXAMPLE PROFILE')",'deleted example stays deleted');await click('RESTORE EXAMPLE PROFILE');await wait("document.body.textContent.includes('Meera Rao')&&document.body.textContent.includes('EXAMPLE · SAMPLE DATA')",'explicit restore');
   await click('Switch profile');await wait("!!document.getElementById('unlock-password')",'personal remains');assert.equal(await evaluate("document.querySelectorAll('.profile-row-btn').length"),1);await fill('unlock-password','disposable-windows-qa');await click('Unlock');await wait("document.querySelector('.screen-title')?.textContent==='Dashboard'",'personal preserved');assert.equal(await evaluate("document.body.textContent.includes('1,184.56')"),true);assert.equal(await evaluate("!!document.querySelector('.current-identity img')"),true);
+  await click('Settings');await click('Set up recovery credential');await fill('recovery-auth-password','disposable-windows-qa');await click('Prepare recovery credential');await wait("!!document.getElementById('recovery-secret')",'recovery draft');
+  const recoverySecret=await evaluate("document.getElementById('recovery-secret').value");const credentialFile=await download('Save credential file','recovery-credential.txt');assert.ok((await fs.readFile(credentialFile,'utf8')).includes(recoverySecret));
+  await evaluate("document.querySelector('[role=dialog] input[type=checkbox]').click()");await fill('recovery-confirm-group',recoverySecret.split('-').at(-1));await click('Enable recovery and lock Folio');await wait("!!document.getElementById('unlock-password')",'recovery setup locks');
+  await click('Use recovery credential');await fill('recovery-unlock-secret',recoverySecret);await fill('recovery-new-password','windows-recovered-qa');await fill('recovery-repeat-password','windows-recovered-qa');await click('Reset password using credential');await wait("document.body.textContent.includes('Password reset. Unlock with your new password.')",'recovery reset');
+  await fill('unlock-password','disposable-windows-qa');await click('Unlock');await wait("document.body.textContent.includes('Incorrect password')",'old password rejected after recovery');await fill('unlock-password','windows-recovered-qa');await click('Unlock');await wait("document.querySelector('.screen-title')?.textContent==='Dashboard'",'recovered Windows profile');assert.equal(await evaluate("document.body.textContent.includes('1,184.56')"),true);
+  await click('Hide amounts');assert.equal(await evaluate("[...document.querySelectorAll('.amount')].every(e=>e.textContent==='••••')"),true);await click('Show amounts');
+  await click('Settings');const recoveryBackupFile=await download('Create encrypted backup','recovery-backup.folio'),recoveryBackupText=await fs.readFile(recoveryBackupFile,'utf8'),recoveryBackup=JSON.parse(recoveryBackupText);assert.equal(recoveryBackup.profile.index.keyEnvelope.version,2);assert.equal(recoveryBackup.profile.vault.vaultSchemaVersion,2);assert.ok(!recoveryBackupText.includes(recoverySecret));
+  await evaluate("[...document.querySelectorAll('summary')].find(e=>e.textContent==='Test an encrypted backup').click()");await evaluate("{const input=document.getElementById('check-backup-file'),transfer=new DataTransfer();transfer.items.add(new File(["+JSON.stringify(recoveryBackupText)+"],'recovery-backup.folio',{type:'application/json'}));input.files=transfer.files;input.dispatchEvent(new Event('change',{bubbles:true}));const method=document.getElementById('check-backup-method');method.value='recovery';method.dispatchEvent(new Event('change',{bubbles:true}));}");await fill('check-backup-password',recoverySecret);await click('Test backup without importing');await wait("document.body.textContent.includes('Authenticated and readable:')",'non-destructive recovery backup verification');
   await click('Transactions');await click('New transaction');await fill('transaction-amount','42');win.close();
   await wait("document.body.textContent.includes('Discard unfinished entry?')",'desktop close guarded');await click('Keep editing');assert.equal(win.isDestroyed(),false);assert.equal(await evaluate("document.getElementById('transaction-amount').value"),'42');
   // Re-request close and explicitly discard only the unsubmitted form.
   win.close();await wait("document.body.textContent.includes('Discard unfinished entry?')",'desktop close re-request');
   assert.deepEqual(errors,[]);
   const closed=new Promise(resolve=>win.once('closed',resolve));await click('Discard entry');await Promise.race([closed,delay(10_000).then(()=>{throw Error('Normal close failed')})]);
-  console.log(JSON.stringify({result:'PASS',origin:'folio://app',checks:['secure context + WebCrypto + IndexedDB','fresh profile','account save','two transactions + save/add','lock flush','wrong password','persisted unlock','encrypted backup download','plaintext CSV download','restore collision + exact balance','fresh Welcome on reopen','real Chromium photo crop + encrypted backup restore','native contact allowlist + clipboard','Example edit/reset/delete/restore + personal isolation','dirty form guards desktop close','normal close flush'],fixture,resources:process.env.FOLIO_INSTALLED_RESOURCES||'win-unpacked/resources'}));
+  console.log(JSON.stringify({result:'PASS',origin:'folio://app',checks:['secure context + WebCrypto + IndexedDB','fresh profile','account save','two transactions + save/add','lock flush','wrong password','persisted unlock','encrypted backup download','plaintext CSV download','restore collision + exact balance','fresh Welcome on reopen','real Chromium photo crop + encrypted backup restore','native contact allowlist + clipboard','Example edit/reset/delete/restore + personal isolation','recovery credential download + atomic upgrade','recovery reset + old password rejection','recovery backup verification without import','privacy display','dirty form guards desktop close','normal close flush'],fixture,resources:process.env.FOLIO_INSTALLED_RESOURCES||'win-unpacked/resources'}));
 }).catch(error => { console.error(error);app.exit(1); });
+
 
 
 

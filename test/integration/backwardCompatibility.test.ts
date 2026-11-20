@@ -34,6 +34,6 @@ describe('ProfileData backward compatibility', () => {
   });
 
   it('throws on unsupported version', () => {
-    expect(() => normalizeProfileData({ version: 2 } as any)).toThrow(/Unsupported profile version/);
+    expect(() => normalizeProfileData({ version: 999 } as any)).toThrow(/Unsupported profile version/);
   });
 });

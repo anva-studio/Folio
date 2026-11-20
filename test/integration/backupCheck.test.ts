@@ -1,0 +1,4 @@
+import {readFileSync} from 'node:fs';import {it,expect} from 'vitest';import {checkBackup} from '../../src/application/backupCheck';
+it('authenticates a released backup without importing or altering its bytes and rejects tampering',async()=>{
+ const raw=JSON.parse(readFileSync(new URL('../fixtures/released-1.0.0.folio',import.meta.url),'utf8')),before=JSON.stringify(raw);expect(await checkBackup(raw,'public-fixture-password')).toMatchObject({currency:'INR',accounts:1,transactions:1,profileVersion:1});expect(JSON.stringify(raw)).toBe(before);await expect(checkBackup(raw,'wrong')).rejects.toThrow();const tampered=structuredClone(raw);tampered.profile.vault.ciphertextBase64='AAAA'+tampered.profile.vault.ciphertextBase64.slice(4);await expect(checkBackup(tampered,'public-fixture-password')).rejects.toThrow();expect(JSON.stringify(raw)).toBe(before);
+});

@@ -1,0 +1,29 @@
+{
+  "format": "folio-encrypted-backup",
+  "backupVersion": 1,
+  "exportedAt": "2026-11-06T01:57:10.825Z",
+  "profile": {
+    "index": {
+      "profileId": "502398ee-d089-4703-b91c-12cd8335a867",
+      "label": "Synthetic released INR fixture",
+      "createdAt": "2026-11-06T01:57:10.821Z",
+      "updatedAt": "2026-11-06T01:57:10.821Z",
+      "kdf": {
+        "algorithm": "PBKDF2",
+        "hash": "SHA-256",
+        "iterations": 310000,
+        "saltBase64": "Zpfr5ZDgbHd7mo+3WY7P3g=="
+      },
+      "authVerifierBase64": "lB1y/Wzh7yz7/154oxwljLqfFLnbY9w0rmsqit9Kvyk="
+    },
+    "vault": {
+      "profileId": "502398ee-d089-4703-b91c-12cd8335a867",
+      "vaultSchemaVersion": 1,
+      "revision": 1,
+      "cipher": "AES-GCM-256",
+      "nonceBase64": "jH02w5WbEJ6nUfO6",
+      "ciphertextBase64": "AqXcNdZFHHOrvqzJhM1M9FUYjZcxtsL7uKZaa9K9vP9LD1C/2zafJiZz2lPFWwC30z6J8aXYolzcQhOlrW9UCaPUfxVc4QlgqA34qdd9CZKXb2Eozvxiwozb+rIRWea3b5Eywy2VHIIIPDJqyz1LB/f7trvm6uToLawQcfSh6cQ22iPzZulXaUjQFrNNpHReYSmZeLPdK+6u606zls5oW3+OFjKSzHvdEB6bxY8EEjodfaRsQivPf63lC2dKQSG0SXLir78ME8l3/2uilDYVrjNv/0h+mCt6ZpKRJzGjaLj+D+brWD62dvIlO4XmYoooYMNqw6QJsx4p9SXIOi2gLz6JL/Lltw+CK0Ypaz8PHojtB97xCUHlNG4O90Dn57z1tV5eeGDhK+BEnMi2VJR+E4UMYXbdFs7LdYceMOpedboVnXO+pvktZBhjDXIfB41j510NpoM8W1HrBAMBW5y5pX/dPH5G4rjkjZJed7K98Nhi6Dk0UGBB7ktrlUWadLYMMUDwalnx4nz8zKCfBU9t6+5P/JqzJds9qQ+p6rMC33udGSYipJAyAw4mBt0PPF9qI3FpzkW2z4IcVkE4PN5ymOhJqPfCUyWOsnot/XAf75x3rgobajlbPEy9RMMfd/ZQHEabD/5dhn5gwJGb8RGRRMBHsTQRGpPmoH2KgNaOnc4qLYkO0+CQKp2lzeiFalPoW7S08V5//WySpagRFQzWZhws4oEH0v7mj6qtQUEdponycTo74JUUxc2dGRmkPIaxIV8JxTHJUSJ5twH78uc5DlXa073HeCVncj/EmjvdVFA7QmCYH54EwUBxuz5C6lVLXhbiBg/xLpb3Otmq0gv80ESd51Az28nLX4g1llWW7XwhIIB8R5GMnb39JTHmYLJ3NelSD/tJ0n33KR/rmwUI4zldJuYVgNZ039DPDaVT35NSerlh9KmINoFTB3XqQMR+kK0zgMSd7qgy5A6xKCNX6BAdih+FGp7yFYVV06koFsg4+noPl06FOkJ4Kw99E/F/5y/N//KmyZivhted",
+      "updatedAt": "2026-11-06T01:57:10.823Z"
+    }
+  }
+}

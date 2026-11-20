@@ -1,0 +1,13 @@
+{
+  "source": "Unchanged outputs/Folio released mobile-polish implementation",
+  "generatedBy": "development/create-legacy-fixture.mjs before new financial-model changes",
+  "syntheticOnly": true,
+  "publicPassword": "public-fixture-password",
+  "sourceSHA256": {
+    "src/application/profileData.ts": "2cbf2f2516c953eb34cae6c40c6f66e2d667a833d643566140ef6de8a65bcdbe",
+    "src/persistence/profileRepository.ts": "16a0fbcb02adb1ede7f2565513f7f9f4f06435048dbdf518df4918e8a0db38df",
+    "src/persistence/vault.ts": "940695594ee96d7c568aa14e19b77f8f3dad4cd0310a5c6ab8e880f504e56d09",
+    "src/security/crypto.ts": "fbfc45595003a0c77348b2e4692442f8490a78a197207ab04b0ca9cc91087c7e",
+    "src/domain/types.ts": "9bda4349303082cca9e36948626ba511d4da61a9bfba9edf5b9d9a4b1b49873b"
+  }
+}

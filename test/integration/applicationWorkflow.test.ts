@@ -15,12 +15,12 @@ describe('Application workflow persistence', () => {
     await repo.open();
 
     const data = createEmptyProfileData(clock);
-    await repo.createProfile({ label: 'Persist', password: 'secret', data });
+    await repo.createProfile({ label: 'Persist', password: "test passphrase secret", data });
     const selectors = await repo.listProfiles();
     const pid = selectors[0].profileId;
 
     const session1 = new ProfileSession(repo);
-    await session1.unlock(pid, 'secret');
+    await session1.unlock(pid, "test passphrase secret");
     const ctrl1 = new FolioController(session1);
     const acc1 = ctrl1.createAccount({ name: 'Bank', type: 'bank', openingBalance: 100000 });
     const acc2 = ctrl1.createAccount({ name: 'Cash', type: 'cash', openingBalance: 0 });
@@ -41,7 +41,7 @@ describe('Application workflow persistence', () => {
     await session1.lock();
 
     const session2 = new ProfileSession(repo);
-    await session2.unlock(pid, 'secret');
+    await session2.unlock(pid, "test passphrase secret");
     const ctrl2 = new FolioController(session2);
     const balances = ctrl2.getAccountBalances();
     expect(balances.balances.get(acc1)).toBe(120000);

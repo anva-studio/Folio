@@ -8,4 +8,9 @@ contextBridge.exposeInMainWorld('folioDesktop', {
     return () => ipcRenderer.removeListener('folio:close-request', listener);
   },
   respondToClose(saved) { ipcRenderer.send('folio:close-response', saved === true); },
+  onPrivacyHide(callback) {
+    const listener = () => callback();
+    ipcRenderer.on('folio:privacy-hide', listener);
+    return () => ipcRenderer.removeListener('folio:privacy-hide', listener);
+  },
 });
