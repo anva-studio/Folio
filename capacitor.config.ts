@@ -5,5 +5,6 @@ const config: CapacitorConfig = {
   webDir: 'dist',
   server: { androidScheme: 'https' },
   android: { allowMixedContent: false },
+  plugins: { SystemBars: { insetsHandling: 'native' } },
 };
 export default config;
